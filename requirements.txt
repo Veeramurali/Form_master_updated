@@ -1,0 +1,15 @@
+streamlit
+requests
+streamlit-lottie
+Pillow
+datetime
+opencv-python
+mediapipe
+numpy
+playsound
+cvzone
+plotly
+pandas
+streamlit-extras
+openai
+toml
