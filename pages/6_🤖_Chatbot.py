@@ -1,13 +1,9 @@
 import openai
 import toml
 import streamlit as st
-
+import os
 # Load configuration from the correct path of secrets.toml
-with open("D:/GIT/AI-Fitness-Trainer/models/pages/secrets.toml", "r") as f:
-    config = toml.load(f)
-
-# Set OpenAI API key from secrets.toml
-openai.api_key = config["openai"]["api_key"]
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Define base prompt
 BASE_PROMPT = [
