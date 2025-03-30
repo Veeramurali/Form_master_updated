@@ -4,6 +4,9 @@ import mediapipe as mp
 import math
 import numpy as np
 import plotly.graph_objects as go
+import sys
+sys.path.append('D:\GIT\AI-Fitness-Trainer\models\PoseDetector.py') 
+from PoseDetector import PoseDetector
 
 # Streamlit UI
 st.markdown("<h2 style='text-align:center; color:white; background-color:#025246; padding:10px;'>Train Here</h2>", unsafe_allow_html=True)
@@ -273,202 +276,202 @@ else:
             cap.release()
             cv2.destroyAllWindows()
 
-    elif st.session_state['type'] == 'Stop_Right':
-        st.write(f"## Analytics\nYou did {st.session_state.counter_right} reps.")
+        elif st.session_state['type'] == 'Stop_Right':
+            st.write(f"## Analytics\nYou did {st.session_state.counter_right} reps.")
 
-        # Calories calculation
-        calories_burned = 0.25 * st.session_state.counter_right
-        st.write(f"You burned {calories_burned:.2f} kcal")
+            # Calories calculation
+            calories_burned = 0.25 * st.session_state.counter_right
+            st.write(f"You burned {calories_burned:.2f} kcal")
 
-        if calories_burned < goal_calorie:
-            st.write("You have not achieved your goal. Try again!")
-        else:
-            st.write("You have achieved your goal. Congratulations! 🎉")
-
-        # Plotting calories burned
-        fig = go.Figure(data=[go.Bar(x=["Right Dumbbell Curl"], y=[calories_burned], name='Calories Burned')])
-        fig.add_trace(go.Bar(x=["Right Dumbbell Curl"], y=[goal_calorie], name='Goal Calorie'))
-        fig.update_layout(title='Calories Burned', xaxis_title='Exercise', yaxis_title='Calories Burned')
-        st.plotly_chart(fig)
-        
-
-    elif app_mode == "Squats":
-        st.markdown("## Squats")
-        weight3 = st.slider('What is your weight?', 20, 130, 40)
-        st.write("I'm ", weight3, 'kgs')
-
-        st.write("-------------")
-
-        goal_calorie3 = st.slider('Set a goal calorie to burn', 1, 200, 15)
-        st.write("I want to burn", goal_calorie3, 'kcal')
-        
-        st.write("-------------")
-
-
-        st.write(" Click on the Start button to start the live video feed.")
-        st.write("##")
-
-
-        # Creating Angle finder class
-        class angleFinder:
-            def __init__(self,lmlist,p1,p2,p3,p4,p5,p6,drawPoints):
-                self.lmlist = lmlist
-                self.p1 = p1
-                self.p2 = p2
-                self.p3 = p3
-                self.p4 = p4
-                self.p5 = p5
-                self.p6 = p6
-                self.drawPoints = drawPoints
-            #    finding angles
-
-            def angle(self):
-                if len(self.lmlist) != 0:
-                    point1 = self.lmlist[self.p1]
-                    point2 = self.lmlist[self.p2]
-                    point3 = self.lmlist[self.p3]
-                    point4 = self.lmlist[self.p4]
-                    point5 = self.lmlist[self.p5]
-                    point6 = self.lmlist[self.p6]
-
-                    x1,y1 = point1[1:-1]
-                    x2, y2 = point2[1:-1]
-                    x3, y3 = point3[1:-1]
-                    x4, y4 = point4[1:-1]
-                    x5, y5 = point5[1:-1]
-                    x6, y6 = point6[1:-1]
-
-                    # calculating angle for left leg
-                    leftLegAngle = math.degrees(math.atan2(y3 - y2, x3 - x2) -
-                                                math.atan2(y1 - y2, x1 - x2))
-
-                    leftLegAngle = int(np.interp(leftLegAngle, [42,143], [100, 0]))
-                    
-
-                    # drawing circles and lines on selected points
-                    if self.drawPoints == True:
-                        cv2.circle(img, (x1, y1), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x1, y1), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x2, y2), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x2, y2), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x3, y3), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x3, y3), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x4, y4), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x4, y4), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x5, y5), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x5, y5), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x6, y6), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x6, y6), 15, (0, 255, 0), 6)
-
-                        cv2.line(img,(x1,y1),(x2,y2),(0,0,255),4)
-                        cv2.line(img, (x2, y2), (x3, y3), (0, 0, 255), 4)
-                        cv2.line(img, (x4, y4), (x5, y5), (0, 0, 255), 4)
-                        cv2.line(img, (x5, y5), (x6, y6), (0, 0, 255), 4)
-                        cv2.line(img, (x1, y1), (x4, y4), (0, 0, 255), 4)
-
-                    return leftLegAngle
-                
-        if 'type' not in st.session_state:
-            st.session_state.type = None
-
-
-        def handle_click_start():
-            st.session_state.type = "Start3"
-
-        def handle_click_stop():
-            st.write(st.session_state.counter3)
-            st.session_state.type = "Stop3"
-        
-        start_button = st.button('Start', on_click=handle_click_start)
-        stop_button = st.button('Stop',  on_click=handle_click_stop)
-
-        # defining some variables
-        counter = 0
-        direction = 0
-
-        frame_placeholder = st.empty()
-
-        detector = PoseDetector(detectionCon=0.7,trackCon=0.7)
-
-
-        if st.session_state['type']=='Start3':
-            cap = cv2.VideoCapture(0)
-            while cap.isOpened():
-                ret, img = cap.read()
-                img = cv2.resize(img,(640,480))
-
-                detector.findPose(img,draw=0)
-                lmList, bboxInfo = detector.findPosition(img, bboxWithHands=0,draw=False)
-
-                angle1 = angleFinder(lmList,24,26,28,23,25,27,drawPoints=True)
-                left = angle1.angle()
-                
-                if left==None:
-                    left=0
-
-                # Counting number of shoulder ups
-                if left >= 90:
-                    if direction == 0:
-                        counter += 0.5
-                        st.session_state.counter3 = counter
-                        direction = 1
-                if left <= 70:
-                    if direction == 1:
-                        counter += 0.5
-                        st.session_state.counter3 = counter
-                        direction = 0
-
-
-
-                #putting scores on the screen
-                cv2.rectangle(img,(0,0),(120,120),(255,0,0),-1)
-                cv2.putText(img,str(int(counter)),(1,70),cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,1.6,(0,0,255),6)
-
-                # Converting values for rectangles
-                leftval = np.interp(left,[0,100],[480,280])
-
-
-                # Drawing left rectangle and putting text
-                cv2.rectangle(img, (582, 280), (632, 480), (0, 0, 255), 5)
-                cv2.rectangle(img, (582, int(leftval)), (632, 480), (0, 0, 255), -1)
-
-
-                img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-
-                frame_placeholder.image(img, "RGB")
-                
-                cv2.waitKey(1)
-                
-        elif st.session_state['type']=='Stop3': 
-            st.write("The video capture has ended")
-
-            st.write("---------")
-            st.write("## Analytics") 
-            st.write("You did ",st.session_state.counter3," reps")   
-            
-            # calories3=6.0*weight3/st.session_state.counter3
-            calories3=0.3*st.session_state.counter3
-            if calories3<goal_calorie3:
-                st.write("You have burned ",calories3,"kcal of calories")
-                st.write("You have not achieved your goal. Try again")
-
+            if calories_burned < goal_calorie:
+                st.write("You have not achieved your goal. Try again!")
             else:
-                st.write("You have burned ",calories3,"kcal of calories")
-                st.write("You have achieved your goal. Congratulations")
-            
-            fig = go.Figure(data=[go.Bar(x=['Bicep Curls'], y=[calories3], name='Calories Burned')])
+                st.write("You have achieved your goal. Congratulations! 🎉")
 
-            fig.add_trace(go.Bar(x=['Bicep Curls'], y=[goal_calorie3], name='Goal Calorie'))
-
-            # Set chart layout
-            fig.update_layout(
-                title='Calories Burned for Bicep Curls',
-                xaxis_title='Exercise',
-                yaxis_title='Calories Burned'
-            )
-
-            # Display the chart using Streamlit
+            # Plotting calories burned
+            fig = go.Figure(data=[go.Bar(x=["Right Dumbbell Curl"], y=[calories_burned], name='Calories Burned')])
+            fig.add_trace(go.Bar(x=["Right Dumbbell Curl"], y=[goal_calorie], name='Goal Calorie'))
+            fig.update_layout(title='Calories Burned', xaxis_title='Exercise', yaxis_title='Calories Burned')
             st.plotly_chart(fig)
+            
+
+        elif app_mode == "Squats":
+            st.markdown("## Squats")
+            weight3 = st.slider('What is your weight?', 20, 130, 40)
+            st.write("I'm ", weight3, 'kgs')
+
+            st.write("-------------")
+
+            goal_calorie3 = st.slider('Set a goal calorie to burn', 1, 200, 15)
+            st.write("I want to burn", goal_calorie3, 'kcal')
+            
+            st.write("-------------")
+
+
+            st.write(" Click on the Start button to start the live video feed.")
+            st.write("##")
+
+
+            # Creating Angle finder class
+            class angleFinder:
+                def __init__(self,lmlist,p1,p2,p3,p4,p5,p6,drawPoints):
+                    self.lmlist = lmlist
+                    self.p1 = p1
+                    self.p2 = p2
+                    self.p3 = p3
+                    self.p4 = p4
+                    self.p5 = p5
+                    self.p6 = p6
+                    self.drawPoints = drawPoints
+                #    finding angles
+
+                def angle(self):
+                    if len(self.lmlist) != 0:
+                        point1 = self.lmlist[self.p1]
+                        point2 = self.lmlist[self.p2]
+                        point3 = self.lmlist[self.p3]
+                        point4 = self.lmlist[self.p4]
+                        point5 = self.lmlist[self.p5]
+                        point6 = self.lmlist[self.p6]
+
+                        x1,y1 = point1[1:-1]
+                        x2, y2 = point2[1:-1]
+                        x3, y3 = point3[1:-1]
+                        x4, y4 = point4[1:-1]
+                        x5, y5 = point5[1:-1]
+                        x6, y6 = point6[1:-1]
+
+                        # calculating angle for left leg
+                        leftLegAngle = math.degrees(math.atan2(y3 - y2, x3 - x2) -
+                                                    math.atan2(y1 - y2, x1 - x2))
+
+                        leftLegAngle = int(np.interp(leftLegAngle, [42,143], [100, 0]))
+                        
+
+                        # drawing circles and lines on selected points
+                        if self.drawPoints == True:
+                            cv2.circle(img, (x1, y1), 10, (0, 255, 255), 5)
+                            cv2.circle(img, (x1, y1), 15, (0, 255, 0), 6)
+                            cv2.circle(img, (x2, y2), 10, (0, 255, 255), 5)
+                            cv2.circle(img, (x2, y2), 15, (0, 255, 0), 6)
+                            cv2.circle(img, (x3, y3), 10, (0, 255, 255), 5)
+                            cv2.circle(img, (x3, y3), 15, (0, 255, 0), 6)
+                            cv2.circle(img, (x4, y4), 10, (0, 255, 255), 5)
+                            cv2.circle(img, (x4, y4), 15, (0, 255, 0), 6)
+                            cv2.circle(img, (x5, y5), 10, (0, 255, 255), 5)
+                            cv2.circle(img, (x5, y5), 15, (0, 255, 0), 6)
+                            cv2.circle(img, (x6, y6), 10, (0, 255, 255), 5)
+                            cv2.circle(img, (x6, y6), 15, (0, 255, 0), 6)
+
+                            cv2.line(img,(x1,y1),(x2,y2),(0,0,255),4)
+                            cv2.line(img, (x2, y2), (x3, y3), (0, 0, 255), 4)
+                            cv2.line(img, (x4, y4), (x5, y5), (0, 0, 255), 4)
+                            cv2.line(img, (x5, y5), (x6, y6), (0, 0, 255), 4)
+                            cv2.line(img, (x1, y1), (x4, y4), (0, 0, 255), 4)
+
+                        return leftLegAngle
+                    
+            if 'type' not in st.session_state:
+                st.session_state.type = None
+
+
+            def handle_click_start():
+                st.session_state.type = "Start3"
+
+            def handle_click_stop():
+                st.write(st.session_state.counter3)
+                st.session_state.type = "Stop3"
+            
+            start_button = st.button('Start', on_click=handle_click_start)
+            stop_button = st.button('Stop',  on_click=handle_click_stop)
+
+            # defining some variables
+            counter = 0
+            direction = 0
+
+            frame_placeholder = st.empty()
+
+            detector = PoseDetector(detectionCon=0.7,trackCon=0.7)
+
+
+            if st.session_state['type']=='Start3':
+                cap = cv2.VideoCapture(0)
+                while cap.isOpened():
+                    ret, img = cap.read()
+                    img = cv2.resize(img,(640,480))
+
+                    detector.findPose(img,draw=0)
+                    lmList, bboxInfo = detector.findPosition(img, bboxWithHands=0,draw=False)
+
+                    angle1 = angleFinder(lmList,24,26,28,23,25,27,drawPoints=True)
+                    left = angle1.angle()
+                    
+                    if left==None:
+                        left=0
+
+                    # Counting number of shoulder ups
+                    if left >= 90:
+                        if direction == 0:
+                            counter += 0.5
+                            st.session_state.counter3 = counter
+                            direction = 1
+                    if left <= 70:
+                        if direction == 1:
+                            counter += 0.5
+                            st.session_state.counter3 = counter
+                            direction = 0
+
+
+
+                    #putting scores on the screen
+                    cv2.rectangle(img,(0,0),(120,120),(255,0,0),-1)
+                    cv2.putText(img,str(int(counter)),(1,70),cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,1.6,(0,0,255),6)
+
+                    # Converting values for rectangles
+                    leftval = np.interp(left,[0,100],[480,280])
+
+
+                    # Drawing left rectangle and putting text
+                    cv2.rectangle(img, (582, 280), (632, 480), (0, 0, 255), 5)
+                    cv2.rectangle(img, (582, int(leftval)), (632, 480), (0, 0, 255), -1)
+
+
+                    img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
+
+                    frame_placeholder.image(img, "RGB")
+                    
+                    cv2.waitKey(1)
+                    
+            elif st.session_state['type']=='Stop3': 
+                st.write("The video capture has ended")
+
+                st.write("---------")
+                st.write("## Analytics") 
+                st.write("You did ",st.session_state.counter3," reps")   
+                
+                # calories3=6.0*weight3/st.session_state.counter3
+                calories3=0.3*st.session_state.counter3
+                if calories3<goal_calorie3:
+                    st.write("You have burned ",calories3,"kcal of calories")
+                    st.write("You have not achieved your goal. Try again")
+
+                else:
+                    st.write("You have burned ",calories3,"kcal of calories")
+                    st.write("You have achieved your goal. Congratulations")
+                
+                fig = go.Figure(data=[go.Bar(x=['Bicep Curls'], y=[calories3], name='Calories Burned')])
+
+                fig.add_trace(go.Bar(x=['Bicep Curls'], y=[goal_calorie3], name='Goal Calorie'))
+
+                # Set chart layout
+                fig.update_layout(
+                    title='Calories Burned for Bicep Curls',
+                    xaxis_title='Exercise',
+                    yaxis_title='Calories Burned'
+                )
+
+                # Display the chart using Streamlit
+                st.plotly_chart(fig)
 
             
 
@@ -655,6 +658,7 @@ else:
             st.plotly_chart(fig)
 
 
+
     elif app_mode == "Shoulder press":
         st.markdown("## Shoulder Press")
         weight5 = st.slider('What is your weight?', 20, 130, 40)
@@ -664,81 +668,40 @@ else:
 
         goal_calorie5 = st.slider('Set a goal calorie to burn', 1, 200, 15)
         st.write("I want to burn", goal_calorie5, 'kcal')
-        
-        st.write("-------------")
 
+        st.write("-------------")
 
         st.write(" Click on the Start button to start the live video feed.")
         st.write("##")
 
-
-        # Creating Angle finder class
-        class angleFinder:
-            def __init__(self,lmlist,p1,p2,p3,p4,p5,p6,drawPoints):
+        # Creating Angle Finder Class
+        class AngleFinder:
+            def __init__(self, lmlist, p1, p2, p3, p4, p5, p6, drawPoints):
                 self.lmlist = lmlist
-                self.p1 = p1
-                self.p2 = p2
-                self.p3 = p3
-                self.p4 = p4
-                self.p5 = p5
-                self.p6 = p6
+                self.p1, self.p2, self.p3 = p1, p2, p3
+                self.p4, self.p5, self.p6 = p4, p5, p6
                 self.drawPoints = drawPoints
-            #    finding angles
 
             def angle(self):
                 if len(self.lmlist) != 0:
-                    point1 = self.lmlist[self.p1]
-                    point2 = self.lmlist[self.p2]
-                    point3 = self.lmlist[self.p3]
-                    point4 = self.lmlist[self.p4]
-                    point5 = self.lmlist[self.p5]
-                    point6 = self.lmlist[self.p6]
+                    x1, y1 = self.lmlist[self.p1][1:-1]
+                    x2, y2 = self.lmlist[self.p2][1:-1]
+                    x3, y3 = self.lmlist[self.p3][1:-1]
+                    x4, y4 = self.lmlist[self.p4][1:-1]
+                    x5, y5 = self.lmlist[self.p5][1:-1]
+                    x6, y6 = self.lmlist[self.p6][1:-1]
 
-                    x1,y1 = point1[1:-1]
-                    x2, y2 = point2[1:-1]
-                    x3, y3 = point3[1:-1]
-                    x4, y4 = point4[1:-1]
-                    x5, y5 = point5[1:-1]
-                    x6, y6 = point6[1:-1]
-
-                    # calculating angle for left and right hands
-                    leftHandAngle = math.degrees(math.atan2(y3 - y2, x3 - x2) -
-                                                math.atan2(y1 - y2, x1 - x2))
-
-                    rightHandAngle = math.degrees(math.atan2(y6 - y5, x6 - x5) -
-                                                math.atan2(y4 - y5, x4 - x5))
+                    leftHandAngle = math.degrees(math.atan2(y3 - y2, x3 - x2) - math.atan2(y1 - y2, x1 - x2))
+                    rightHandAngle = math.degrees(math.atan2(y6 - y5, x6 - x5) - math.atan2(y4 - y5, x4 - x5))
 
                     leftHandAngle = int(np.interp(leftHandAngle, [-170, 180], [100, 0]))
-                    #rightHandAngle = int(np.interp(rightHandAngle, [-50, 20], [100, 0]))
                     rightHandAngle = int(np.interp(rightHandAngle, [-170, 180], [100, 0]))
-                    
 
-                    # drawing circles and lines on selected points
-                    if self.drawPoints == True:
-                        cv2.circle(img, (x1, y1), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x1, y1), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x2, y2), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x2, y2), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x3, y3), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x3, y3), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x4, y4), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x4, y4), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x5, y5), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x5, y5), 15, (0, 255, 0), 6)
-                        cv2.circle(img, (x6, y6), 10, (0, 255, 255), 5)
-                        cv2.circle(img, (x6, y6), 15, (0, 255, 0), 6)
+                    return [leftHandAngle, rightHandAngle]
+                return None
 
-                        cv2.line(img,(x1,y1),(x2,y2),(0,0,255),4)
-                        cv2.line(img, (x2, y2), (x3, y3), (0, 0, 255), 4)
-                        cv2.line(img, (x4, y4), (x5, y5), (0, 0, 255), 4)
-                        cv2.line(img, (x5, y5), (x6, y6), (0, 0, 255), 4)
-                        cv2.line(img, (x1, y1), (x4, y4), (0, 0, 255), 4)
-
-                    return list([leftHandAngle,rightHandAngle])
-                
         if 'type' not in st.session_state:
             st.session_state.type = None
-
 
         def handle_click_start():
             st.session_state.type = "Start5"
@@ -746,114 +709,87 @@ else:
         def handle_click_stop():
             st.write(st.session_state.counter5)
             st.session_state.type = "Stop5"
-        
-        start_button = st.button('Start', on_click=handle_click_start)
-        stop_button = st.button('Stop',  on_click=handle_click_stop)
 
-        # defining some variables
+        start_button = st.button('Start', on_click=handle_click_start)
+        stop_button = st.button('Stop', on_click=handle_click_stop)
+
         counter = 0
         direction = 0
-
         frame_placeholder = st.empty()
+        detector = PoseDetector(detectionCon=0.7, trackCon=0.7)
 
-        detector = PoseDetector(detectionCon=0.7,trackCon=0.7)
-
-
-        if st.session_state['type']=='Start5':
-            cap=cv2.VideoCapture(0)
+        if st.session_state['type'] == 'Start5':
+            cap = cv2.VideoCapture(0)
 
             while cap.isOpened():
                 ret, img = cap.read()
-                img = cv2.resize(img,(1000,600))
+                img = cv2.resize(img, (1000, 600))
 
-                detector.findPose(img,draw=0)
-                lmList, bboxInfo = detector.findPosition(img, bboxWithHands=0,draw=False)
+                detector.findPose(img, draw=False)
+                lmList, bboxInfo = detector.findPosition(img, bboxWithHands=False, draw=False)
 
-                angle1 = angleFinder(lmList,11,13,15,12,14,16,drawPoints=True)
-                hands = angle1.angle()
+                if lmList:
+                    angle1 = AngleFinder(lmList, 11, 13, 15, 12, 14, 16, drawPoints=True)
+                    hands = angle1.angle()
 
-                if hands==None:
-                    continue
+                    if hands:
+                        left, right = hands
 
-                left, right = hands[0:]
+                        print(f"Left: {left}, Right: {right}")  # Debugging print statement
 
-                # Counting number of shoulder ups
-                if left >= 90 and right >= 90:
-                    if direction == 0:
-                        counter += 0.5
-                        st.session_state.counter5 = counter
-                        direction = 1
-                if left <= 70 and right <= 70:
-                    if direction == 1:
-                        counter += 0.5
-                        st.session_state.counter5 = counter
-                        direction = 0
+                        # Counting Shoulder Press Reps
+                        if left >= 90 and right >= 90 and direction == 0:
+                            counter += 0.5
+                            st.session_state.counter5 = counter
+                            direction = 1
+                        if left <= 70 and right <= 70 and direction == 1:
+                            counter += 0.5
+                            st.session_state.counter5 = counter
+                            direction = 0
 
+                        # Display Score
+                        cv2.rectangle(img, (0, 0), (120, 120), (255, 0, 0), -1)
+                        cv2.putText(img, str(int(counter)), (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.6, (0, 0, 255), 6)
 
+                        # Converting values for meters
+                        leftval = np.interp(left, [0, 100], [400, 200])
+                        rightval = np.interp(right, [0, 100], [400, 200])
 
-                #putting scores on the screen
-                cv2.rectangle(img,(0,0),(120,120),(255,0,0),-1)
-                cv2.putText(img,str(int(counter)),(1,70),cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,1.6,(0,0,255),6)
+                        # Adjusted Position to Ensure Visibility
+                        cv2.putText(img, 'L', (900, 195), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 5)
+                        cv2.rectangle(img, (850, 200), (900, 400), (0, 255, 0), 5)
+                        cv2.rectangle(img, (850, int(leftval)), (900, 400), (255, 0, 0), -1)
 
-                # Converting values for rectangles
-                leftval = np.interp(left,[0,100],[400,200])
-                rightval = np.interp(right, [0, 100], [400, 200])
+                        cv2.putText(img, 'R', (50, 195), cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0), 5)
+                        cv2.rectangle(img, (20, 200), (70, 400), (0, 255, 0), 5)
+                        cv2.rectangle(img, (20, int(rightval)), (70, 400), (255, 0, 0), -1)
 
-                # For color changing
-                value_left = np.interp(left, [0, 100], [0, 100])
-                value_right = np.interp(right,  [0, 100], [0, 100])
-
-                # Drawing right rectangle and putting text
-                cv2.putText(img,'R',(24,195),cv2.FONT_HERSHEY_DUPLEX,1,(255, 0, 0),5)
-                cv2.rectangle(img,(8,200),(50,400),(0,255,0),5)
-                cv2.rectangle(img, (8, int(rightval)), (50, 400), (255, 0, 0), -1)
-
-
-                # Drawing left rectangle and putting text
-                cv2.putText(img, 'L', (900,195),cv2.FONT_HERSHEY_DUPLEX, 1, (255, 0, 0),5)
-                cv2.rectangle(img, (882, 200), (932, 400), (0, 255, 0), 5)
-                cv2.rectangle(img, (882, int(leftval)), (932, 400), (255, 0, 0), -1)
-
-                if value_left > 70:
-                    cv2.rectangle(img, (882, int(leftval)), (932, 400), (0, 0, 255), -1)
-
-                if value_right > 70:
-                    cv2.rectangle(img, (8, int(rightval)), (50, 400), (0, 0, 255), -1)
-
-
-                img=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-
-                frame_placeholder.image(img, "RGB")
+                        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                        frame_placeholder.image(img, "RGB")
                 
                 cv2.waitKey(1)
-                
-        elif st.session_state['type']=='Stop5': 
+
+        elif st.session_state['type'] == 'Stop5':
             st.write("The video capture has ended")
-
             st.write("---------")
-            st.write("## Analytics") 
-            st.write("You did ",st.session_state.counter5," reps")   
-            
-            # calories5=5.5*weight5/st.session_state.counter5
-            calories5=0.22*st.session_state.counter5
-            if calories5<goal_calorie5:
-                st.write("You have burned ",calories5,"kcal of calories")
+            st.write("## Analytics")
+            st.write("You did ", st.session_state.counter5, " reps")
+
+            calories5 = 0.22 * st.session_state.counter5
+            if calories5 < goal_calorie5:
+                st.write("You have burned ", calories5, "kcal of calories")
                 st.write("You have not achieved your goal. Try again")
-
             else:
-                st.write("You have burned ",calories5,"kcal of calories")
+                st.write("You have burned ", calories5, "kcal of calories")
                 st.write("You have achieved your goal. Congratulations")
-            
-            fig = go.Figure(data=[go.Bar(x=['Bicep Curls'], y=[calories5], name='Calories Burned')])
 
-            fig.add_trace(go.Bar(x=['Bicep Curls'], y=[goal_calorie5], name='Goal Calorie'))
+            fig = go.Figure(data=[go.Bar(x=['Shoulder Press'], y=[calories5], name='Calories Burned')])
+            fig.add_trace(go.Bar(x=['Shoulder Press'], y=[goal_calorie5], name='Goal Calorie'))
 
-            # Set chart layout
             fig.update_layout(
-                title='Calories Burned for Bicep Curls',
+                title='Calories Burned for Shoulder Press',
                 xaxis_title='Exercise',
                 yaxis_title='Calories Burned'
             )
 
-            # Display the chart using Streamlit
             st.plotly_chart(fig)
