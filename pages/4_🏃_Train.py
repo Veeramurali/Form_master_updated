@@ -5,13 +5,11 @@ import math
 import numpy as np
 import plotly.graph_objects as go
 import sys
-sys.path.append('D:\GIT\AI-Fitness-Trainer\models\PoseDetector.py') 
+sys.path.append('D:/GIT/AI-Fitness-Trainer/models/PoseDetector.py') 
 from PoseDetector import PoseDetector
 
-# Streamlit UI
 st.markdown("<h2 style='text-align:center; color:white; background-color:#025246; padding:10px;'>Train Here</h2>", unsafe_allow_html=True)
 
-# Sidebar selection
 app_mode = st.sidebar.selectbox("Choose the exercise", ["About", "Left Dumbbell", "Right Dumbbell", "Squats", "Pushups", "Shoulder Press"])
 
 if app_mode == "About":
@@ -23,34 +21,12 @@ if app_mode == "About":
     - Ensure proper lighting.
     - Keep the camera focused on you.
     """)
-
 else:
     st.markdown(f"## {app_mode} Exercise")
-
     weight1 = st.slider('Enter your weight (kg)', 20, 130, 40)
     goal_calorie1 = st.slider('Set a goal calorie to burn', 1, 200, 15)
-
     st.write("Click Start to begin the exercise.")
 
-    # Initialize MediaPipe Pose
-    mp_pose = mp.solutions.pose
-    mp_draw = mp.solutions.drawing_utils
-
-    # Angle calculation function
-    def calculate_angle(a, b, c):
-        a = np.array(a)  # First joint
-        b = np.array(b)  # Middle joint
-        c = np.array(c)  # Last joint
-
-        radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(a[1] - b[1], a[0] - b[0])
-        angle = np.abs(radians * 180.0 / np.pi)
-
-        if angle > 180.0:
-            angle = 360 - angle
-
-        return int(angle)
-
-    # Button handlers
     if 'type' not in st.session_state:
         st.session_state.type = None
 
@@ -67,8 +43,19 @@ else:
     counter, direction = 0, 0
     frame_placeholder = st.empty()
 
+    def calculate_angle(a, b, c):
+        a = np.array(a)
+        b = np.array(b)
+        c = np.array(c)
+        radians = np.arctan2(c[1] - b[1], c[0] - b[0]) - np.arctan2(a[1] - b[1], a[0] - b[0])
+        angle = np.abs(radians * 180.0 / np.pi)
+        if angle > 180.0:
+            angle = 360 - angle
+        return int(angle)
+
     if st.session_state['type'] == 'Start':
         cap = cv2.VideoCapture(0)
+        mp_pose = mp.solutions.pose
 
         with mp_pose.Pose(min_detection_confidence=0.7, min_tracking_confidence=0.7) as pose:
             while cap.isOpened():
@@ -76,7 +63,6 @@ else:
                 if not ret:
                     break
 
-                # Convert frame to RGB
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 results = pose.process(frame)
                 frame = cv2.cvtColor(frame, cv2.COLOR_RGB2BGR)
@@ -84,55 +70,61 @@ else:
                 if results.pose_landmarks:
                     landmarks = results.pose_landmarks.landmark
 
-                    # Detect joints based on the selected exercise
-                    if app_mode == "Left Dumbbell":
-                        joint1, joint2, joint3 = mp_pose.PoseLandmark.LEFT_SHOULDER, mp_pose.PoseLandmark.LEFT_ELBOW, mp_pose.PoseLandmark.LEFT_WRIST
-                    elif app_mode == "Right Dumbbell":
-                        joint1, joint2, joint3 = mp_pose.PoseLandmark.RIGHT_SHOULDER, mp_pose.PoseLandmark.RIGHT_ELBOW, mp_pose.PoseLandmark.RIGHT_WRIST
-                    elif app_mode == "Squats":
-                        joint1, joint2, joint3 = mp_pose.PoseLandmark.LEFT_HIP, mp_pose.PoseLandmark.LEFT_KNEE, mp_pose.PoseLandmark.LEFT_ANKLE
-                    elif app_mode == "Pushups":
-                        joint1, joint2, joint3 = mp_pose.PoseLandmark.LEFT_SHOULDER, mp_pose.PoseLandmark.LEFT_ELBOW, mp_pose.PoseLandmark.LEFT_WRIST
-                    elif app_mode == "Shoulder Press":
-                        joint1, joint2, joint3 = mp_pose.PoseLandmark.LEFT_ELBOW, mp_pose.PoseLandmark.LEFT_SHOULDER, mp_pose.PoseLandmark.LEFT_HIP
+                    def get_point(landmark):
+                        return [landmarks[landmark].x * frame.shape[1], landmarks[landmark].y * frame.shape[0]]
 
-                    # Get joint positions
-                    p1 = [landmarks[joint1.value].x * frame.shape[1], landmarks[joint1.value].y * frame.shape[0]]
-                    p2 = [landmarks[joint2.value].x * frame.shape[1], landmarks[joint2.value].y * frame.shape[0]]
-                    p3 = [landmarks[joint3.value].x * frame.shape[1], landmarks[joint3.value].y * frame.shape[0]]
+                    # Default to one side
+                    use_both_sides = app_mode in ["Pushups", "Shoulder Press"]
 
-                    # Calculate angle
-                    angle = calculate_angle(p1, p2, p3)
+                    sides = ['LEFT', 'RIGHT'] if use_both_sides else ['LEFT'] if "Left" in app_mode else ['RIGHT']
 
-                    # Draw line connecting joints
-                    cv2.line(frame, tuple(map(int, p1)), tuple(map(int, p2)), (0, 255, 0), 4)
-                    cv2.line(frame, tuple(map(int, p2)), tuple(map(int, p3)), (0, 255, 0), 4)
+                    for side in sides:
+                        if app_mode in ["Left Dumbbell", "Right Dumbbell"]:
+                            joint1 = getattr(mp_pose.PoseLandmark, f"{side}_SHOULDER").value
+                            joint2 = getattr(mp_pose.PoseLandmark, f"{side}_ELBOW").value
+                            joint3 = getattr(mp_pose.PoseLandmark, f"{side}_WRIST").value
+                        elif app_mode == "Squats":
+                            joint1 = getattr(mp_pose.PoseLandmark, f"{side}_HIP").value
+                            joint2 = getattr(mp_pose.PoseLandmark, f"{side}_KNEE").value
+                            joint3 = getattr(mp_pose.PoseLandmark, f"{side}_ANKLE").value
+                        elif app_mode == "Pushups":
+                            joint1 = getattr(mp_pose.PoseLandmark, f"{side}_SHOULDER").value
+                            joint2 = getattr(mp_pose.PoseLandmark, f"{side}_ELBOW").value
+                            joint3 = getattr(mp_pose.PoseLandmark, f"{side}_WRIST").value
+                        elif app_mode == "Shoulder Press":
+                            joint1 = getattr(mp_pose.PoseLandmark, f"{side}_ELBOW").value
+                            joint2 = getattr(mp_pose.PoseLandmark, f"{side}_SHOULDER").value
+                            joint3 = getattr(mp_pose.PoseLandmark, f"{side}_HIP").value
 
-                    # Draw circles on joints
-                    cv2.circle(frame, tuple(map(int, p1)), 8, (255, 0, 255), -1)
-                    cv2.circle(frame, tuple(map(int, p2)), 8, (255, 0, 255), -1)
-                    cv2.circle(frame, tuple(map(int, p3)), 8, (255, 0, 255), -1)
+                        p1 = get_point(joint1)
+                        p2 = get_point(joint2)
+                        p3 = get_point(joint3)
 
-                    # Rep counting logic
-                    if angle >= 90 and direction == 0:
-                        counter += 0.5
-                        st.session_state.counter1 = counter
-                        direction = 1
-                    elif angle <= 70 and direction == 1:
-                        counter += 0.5
-                        st.session_state.counter1 = counter
-                        direction = 0
+                        angle = calculate_angle(p1, p2, p3)
 
-                    # Display rep count
-                    cv2.rectangle(frame, (10, 10), (150, 80), (255, 0, 0), -1)
-                    cv2.putText(frame, str(int(counter)), (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
+                        cv2.line(frame, tuple(map(int, p1)), tuple(map(int, p2)), (0, 255, 0), 4)
+                        cv2.line(frame, tuple(map(int, p2)), tuple(map(int, p3)), (0, 255, 0), 4)
 
-                    # Draw progress bar
-                    progress = np.interp(angle, [30, 130], [480, 200])
-                    cv2.rectangle(frame, (580, 200), (630, 480), (0, 0, 255), 5)
-                    cv2.rectangle(frame, (580, int(progress)), (630, 480), (0, 0, 255), -1)
+                        cv2.circle(frame, tuple(map(int, p1)), 8, (255, 0, 255), -1)
+                        cv2.circle(frame, tuple(map(int, p2)), 8, (255, 0, 255), -1)
+                        cv2.circle(frame, tuple(map(int, p3)), 8, (255, 0, 255), -1)
 
-                # Convert frame to RGB for Streamlit display
+                        if angle >= 90 and direction == 0:
+                            counter += 0.5
+                            st.session_state.counter1 = counter
+                            direction = 1
+                        elif angle <= 70 and direction == 1:
+                            counter += 0.5
+                            st.session_state.counter1 = counter
+                            direction = 0
+
+                        cv2.rectangle(frame, (10, 10), (150, 80), (255, 0, 0), -1)
+                        cv2.putText(frame, str(int(counter)), (30, 60), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 255), 5)
+
+                        progress = np.interp(angle, [30, 130], [480, 200])
+                        cv2.rectangle(frame, (580, 200), (630, 480), (0, 0, 255), 5)
+                        cv2.rectangle(frame, (580, int(progress)), (630, 480), (0, 0, 255), -1)
+
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
                 frame_placeholder.image(frame, "RGB")
 
@@ -141,6 +133,7 @@ else:
 
         cap.release()
         cv2.destroyAllWindows()
+
 
     elif st.session_state['type'] == 'Stop':
         st.write(f"## Analytics\nYou did {st.session_state.counter1} reps.")

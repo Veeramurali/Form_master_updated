@@ -83,7 +83,9 @@ else:
     st.error("File not found! Please check the path and try again.")
     st.stop()
 
-
+# User inputs for target calories and target protein
+target_calories = st.number_input("Enter your target daily calorie intake (kcal):", min_value=1000, max_value=5000, step=50)
+target_protein = st.number_input("Enter your target daily protein intake (grams):", min_value=10, max_value=500, step=5)
 
 ye = st.number_input('Enter Number of dishes', min_value=1, max_value=10)
 i = 0
@@ -172,6 +174,60 @@ try:
         fig6 = go.Figure(data=[go.Pie(labels=list1, values=list8, textinfo='percent', insidetextorientation='radial')])
         fig6.update_layout(title="Calcium Breakdown")
         st.plotly_chart(fig6)
+    
+    # Final Graph: Actual vs Target Intake
+    st.subheader("Your Intake vs Target")
+
+    if list2 and list3:  # Ensure there's data
+        actual_calories = sum(list2)
+        actual_protein = sum(list3)
+
+        comparison_df = pd.DataFrame({
+            "Nutrient": ["Calories", "Protein"],
+            "Target": [target_calories, target_protein],
+            "Intake": [actual_calories, actual_protein]
+        })
+
+        fig_bar = go.Figure()
+        fig_bar.add_trace(go.Bar(
+            x=comparison_df["Nutrient"],
+            y=comparison_df["Target"],
+            name='Target',
+            marker_color='lightgreen'
+        ))
+        fig_bar.add_trace(go.Bar(
+            x=comparison_df["Nutrient"],
+            y=comparison_df["Intake"],
+            name='Your Intake',
+            marker_color='orange'
+        ))
+        fig_bar.update_layout(
+            barmode='group',
+            title="Target vs Your Intake",
+            yaxis_title="Amount",
+            legend_title="Comparison"
+        )
+
+        st.plotly_chart(fig_bar)
+
+    # Optional Analysis Text
+    st.write("### Summary")
+    if actual_calories < target_calories:
+        st.success(f"You consumed **{round(target_calories - actual_calories)} kcal less** than your target. Consider adding more calorie-dense foods.")
+    elif actual_calories > target_calories:
+        st.warning(f"You consumed **{round(actual_calories - target_calories)} kcal more** than your target. Be mindful if you're trying to maintain or lose weight.")
+    else:
+        st.info("You hit your calorie target perfectly!")
+
+    if actual_protein < target_protein:
+        st.success(f"You are **{round(target_protein - actual_protein)} g protein short**. Try including more protein-rich items.")
+    elif actual_protein > target_protein:
+        st.warning(f"You consumed **{round(actual_protein - target_protein)} g protein more** than target. That's okay if you're building muscle.")
+    else:
+        st.info("You nailed your protein target!")
+
+
+
 
 except Exception as e:
     st.write(f"An error occurred: {e}")
